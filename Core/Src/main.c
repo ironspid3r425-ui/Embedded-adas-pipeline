@@ -21,6 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <string.h>
+#include <stdio.h>
 #include "ssd1306.h"
 #include "ssd1306_fonts.h"
 #include "ssd1306_tests.h"
@@ -44,6 +46,8 @@
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
+SPI_HandleTypeDef hspi2;
+
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
@@ -55,6 +59,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_I2C1_Init(void);
+static void MX_SPI2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -95,6 +100,7 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
+  MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
   ssd1306_Init();//inits the OLED display
   //ssd1306_Fill(White);
@@ -102,6 +108,10 @@ int main(void)
 //  ssd1306_SetCursor(64,32);
 //  retVal = ssd1306_WriteString(msg, Font_7x10, White);
 //  ssd1306_UpdateScreen();
+  uint8_t tx_data[4] = {0xAA, 0xBB, 0xCC, 0xDD};
+  uint8_t rx_data[4];
+  char buf[32];
+  HAL_SPI_TransmitReceive(&hspi2, tx_data, rx_data, 4 , HAL_MAX_DELAY);
   //HAL_UART_Transmit(&huart2,(uint8_t*)msg, sizeof(msg)-1, HAL_MAX_DELAY);/*Using UART2 to output the msg*/
   /* USER CODE END 2 */
 
@@ -110,7 +120,24 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-	  ssd1306_TestDrawBitmap();// Sends the gif frames as a bitmap 1 by 1 to the display with a delay of 40
+	  ssd1306_Fill(Black);
+	  ssd1306_SetCursor(0,0);
+	  sprintf(buf, "TX: %02X %02X %02X %02X", tx_data[0], tx_data[1], tx_data[2], tx_data[3]);
+	  ssd1306_WriteString(buf, Font_7x10,White);
+	  HAL_UART_Transmit(&huart2,(uint8_t*)buf, strlen(buf),HAL_MAX_DELAY);
+	  ssd1306_SetCursor(0,15);
+	  sprintf(buf, "RX: %02X %02X %02X %02X", rx_data[0],rx_data[1],rx_data[2],rx_data[3]);
+	  ssd1306_WriteString(buf, Font_7x10, White);
+	  HAL_UART_Transmit(&huart2, (uint8_t*)buf, strlen(buf),HAL_MAX_DELAY);
+
+	  ssd1306_UpdateScreen();
+
+	  uint8_t match = (memcmp(tx_data, rx_data, 4) ==0);
+	  ssd1306_SetCursor(0,30);
+	  ssd1306_WriteString(match ? "SPI: PASS" : "SPI: FAIL", Font_7x10, White);
+	  HAL_UART_Transmit(&huart2, (uint8_t*)match, strlen(match),HAL_MAX_DELAY);
+	  ssd1306_UpdateScreen();
+
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
@@ -193,6 +220,44 @@ static void MX_I2C1_Init(void)
   /* USER CODE BEGIN I2C1_Init 2 */
 
   /* USER CODE END I2C1_Init 2 */
+
+}
+
+/**
+  * @brief SPI2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI2_Init(void)
+{
+
+  /* USER CODE BEGIN SPI2_Init 0 */
+
+  /* USER CODE END SPI2_Init 0 */
+
+  /* USER CODE BEGIN SPI2_Init 1 */
+
+  /* USER CODE END SPI2_Init 1 */
+  /* SPI2 parameter configuration*/
+  hspi2.Instance = SPI2;
+  hspi2.Init.Mode = SPI_MODE_MASTER;
+  hspi2.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi2.Init.NSS = SPI_NSS_SOFT;
+  hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi2.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI2_Init 2 */
+
+  /* USER CODE END SPI2_Init 2 */
 
 }
 
