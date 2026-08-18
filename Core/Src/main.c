@@ -103,16 +103,22 @@ int main(void)
   MX_SPI2_Init();
   /* USER CODE BEGIN 2 */
   ssd1306_Init();//inits the OLED display
-  //ssd1306_Fill(White);
-  //ssd1306_UpdateScreen();
-//  ssd1306_SetCursor(64,32);
-//  retVal = ssd1306_WriteString(msg, Font_7x10, White);
-//  ssd1306_UpdateScreen();
+/*  ssd1306_Fill(White);
+  ssd1306_UpdateScreen();
+  ssd1306_SetCursor(64,32);
+  retVal = ssd1306_WriteString(msg, Font_7x10, White);
+  ssd1306_UpdateScreen();
   uint8_t tx_data[4] = {0xAA, 0xBB, 0xCC, 0xDD};
   uint8_t rx_data[4];
   char buf[32];
   HAL_SPI_TransmitReceive(&hspi2, tx_data, rx_data, 4 , HAL_MAX_DELAY);
-  //HAL_UART_Transmit(&huart2,(uint8_t*)msg, sizeof(msg)-1, HAL_MAX_DELAY);/*Using UART2 to output the msg*/
+  HAL_UART_Transmit(&huart2,(uint8_t*)msg, sizeof(msg)-1, HAL_MAX_DELAY);*//*Using UART2 to output the msg*/
+  /*Enable GPIOA clock */
+  RCC->AHB1ENR |= (1<<0); // Bit 0 = GPIOAEN
+
+  /*Set PA5 as output (MODER bits 10-11 = 01 for output)*/
+  GPIOA->MODER &= ~(3<<(5*2)); //clear bits 10-11
+  GPIOA->MODER |= (1<<(5*2)); //set to 01 (output mode)
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -120,6 +126,10 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	  GPIOA->ODR ^= (1<<5); //Toggle PA
+	  HAL_Delay(500);
+
+/*
 	  ssd1306_Fill(Black);
 	  ssd1306_SetCursor(0,0);
 	  sprintf(buf, "TX: %02X %02X %02X %02X", tx_data[0], tx_data[1], tx_data[2], tx_data[3]);
@@ -137,6 +147,7 @@ int main(void)
 	  ssd1306_WriteString(match ? "SPI: PASS" : "SPI: FAIL", Font_7x10, White);
 	  HAL_UART_Transmit(&huart2, (uint8_t*)match, strlen(match),HAL_MAX_DELAY);
 	  ssd1306_UpdateScreen();
+*/
 
     /* USER CODE BEGIN 3 */
   }
