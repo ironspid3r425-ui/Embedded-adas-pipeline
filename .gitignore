@@ -10,3 +10,7 @@ Release/
 *.elf
 .vs/
 .metadata/
+# Python (tester/)
+__pycache__/
+*.pyc
+.pytest_cache/
