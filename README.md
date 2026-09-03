@@ -71,8 +71,10 @@ C, STM32 HAL + direct register access, STM32CubeIDE/CubeMX, NUCLEO-F411RE (STM32
 - Traced through `HAL_GPIO_Init()`'s own source to see exactly which registers it touches, using the HAL itself as a register-level reference
 - Takeaway that generalizes beyond GPIO: always check the peripheral's clock-enable bit first — most "nothing happens" bugs on a fresh peripheral trace back to a clock that was never gated on
 
-## What's Next
+## Roadmap
 
-- **CAN bus (next up):** wire an MCP2515 CAN controller to this board over the already-validated SPI1 pins, send a real CAN frame, and receive it on a second microcontroller — the actual automotive-relevant protocol this "ADAS alert" framing has been building toward
-- Move the alert logic into a proper multi-task structure (FreeRTOS) instead of a single polling loop, once a second board is talking to this one over CAN
-- Extend the SPI/I2C bus work into an actual sensor driver (e.g. an IMU or distance sensor) as a real ADAS input, rather than the loopback test standing in for one
+This project builds in one direction: from bare-metal peripheral bring-up (done, above) toward a small but real **automotive diagnostics stack** on the same board — CAN bus, then a FreeRTOS task structure, then a hand-built **UDS/DTC diagnostic responder** (a working miniature of the DCM/DEM/NvM modules a real AUTOSAR ECU uses). The full phase-by-phase spec is in **[ROADMAP.md](ROADMAP.md)**.
+
+- **Phase 2 — CAN bus (next up):** wire an MCP2515 over the validated SPI1 pins, send/receive a real frame, verify it on the wire with a logic analyzer.
+- **Phase 3 — FreeRTOS:** move the alert logic into prioritized tasks instead of a polling loop.
+- **Phase 4 — UDS diagnostics (capstone):** ISO-TP segmentation, a UDS responder, a flash-backed DTC fault store — automotive diagnostics on real hardware, with a Python tester driving it.
